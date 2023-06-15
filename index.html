@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>オープンストリートのデータを取得して保存</title>
+  </head>
+  <body>
+    <div id="downloadLinksContainer"></div>
+    <script>
+      let linkIndex = 1;
+
+      function createDownloadLink(data) {
+        let now = new Date();
+        let month = now.getMonth() + 1;
+        let date = now.getDate();
+        let hour = now.getHours();
+        let minute = now.getMinutes();
+
+        const filename =
+          month + "月" + date + "日" + hour + "時" + minute + "分.json";
+        const jsonData = JSON.stringify(data);
+        const blob = new Blob([jsonData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const downloadLinksContainer = document.getElementById(
+          "downloadLinksContainer"
+        );
+        const downloadLink = document.createElement("a");
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        downloadLink.textContent =
+          month + "月" + date + "日" + hour + "時" ;
+        downloadLinksContainer.appendChild(downloadLink);
+
+        linkIndex++;
+      }
+
+      function fetchDataAndCreateDownloadLink() {
+        fetch(
+          "https://api-public.odpt.org/api/v4/gbfs/hellocycling/station_status.json"
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            createDownloadLink(data);
+            saveData(data); // データを保存
+          })
+          .catch((error) => console.error(error));
+      }
+
+      function saveData(data) {
+        let now = new Date();
+        let month = now.getMonth() + 1;
+        let date = now.getDate();
+        let hour = now.getHours();
+        let minute = now.getMinutes();
+
+        const jsonData = JSON.stringify(data);
+        const filename =
+          month + "月" + date + "日" + hour + "時" + ".json";
+        const blob = new Blob([jsonData], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+
+        const downloadLink = document.createElement("a");
+        downloadLink.href = url;
+        downloadLink.download = filename;
+        downloadLink.style.display = "none"; // リンクを非表示にする
+        document.body.appendChild(downloadLink);
+        downloadLink.click(); // ダウンロードをトリガーする
+        document.body.removeChild(downloadLink);
+      }
+
+      function startNextExecution() {
+        fetchDataAndCreateDownloadLink();
+        setTimeout(startNextExecution, 3600000); // 1時間後に再実行
+      }
+
+      // 最初の実行をスタート
+      startNextExecution();
+    </script>
+  </body>
+</html>
